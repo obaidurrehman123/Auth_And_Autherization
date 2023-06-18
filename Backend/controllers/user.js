@@ -1,4 +1,14 @@
-const { User, Permissions } = require("../models");
+const {
+  User,
+  Permissions,
+  ipaddress,
+  Attendance,
+  AttendanceStatus,
+} = require("../models");
+const { getuserIp } = require("../helpers/gettingIp");
+const session = require("express-session");
+const { Sequelize } = require("sequelize");
+const { Op } = require("sequelize");
 const JWT = require("jsonwebtoken");
 const {
   hashPassword,
@@ -85,13 +95,13 @@ const createUser = async (req, res) => {
       delete: permissions.delete,
       read: permissions.read,
     };
-    res.status(200).send({
+    return res.status(200).send({
       status: true,
       message: "Successfully created the user",
       responseDetail,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       status: false,
       message: "Error while creating user",
       error,
@@ -103,50 +113,180 @@ const userLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email) {
-      return res.status(400).json({ message: "email cannot be empty" });
+      return res.status(400).json({ message: "Email cannot be empty" });
     }
     if (!password) {
-      return res.status(400).json({ message: "password cannot be empty" });
+      return res.status(400).json({ message: "Password cannot be empty" });
     }
-    const checkUser = await User.findOne({ where: { email: email } });
+    const checkUser = await User.findOne({ where: { email } });
     if (!checkUser) {
-      return res.status(400).json({
-        status: false,
-        message: "user does not exist",
-      });
+      return res.status(400).json({ message: "User does not exist" });
     }
     if (checkUser.superUser) {
-      return res.status(400).json({
-        status: false,
-        message: "SuperUser Cannot be logged in from this route",
-      });
+      return res
+        .status(400)
+        .json({ message: "SuperUser cannot be logged in from this route" });
+    }
+    let availableIp = req.ip;
+    if (availableIp.startsWith("::ffff:")) {
+      availableIp = availableIp.slice("::ffff:".length);
+    }
+    if (req.session.ipAddress && req.session.loggedIn) {
+      return res
+        .status(400)
+        .json({ message: "already logged in and has started the session " });
     }
     const compare = await comparePassword(password, checkUser.password);
     if (!compare) {
-      return res.status(400).json({
-        status: false,
-        message: "incorrect password",
-      });
+      return res.status(400).json({ message: "Incorrect password" });
     }
     const token = JWT.sign({ id: checkUser.id }, process.env.SECRET_SIGNATURE, {
-      expiresIn: "7d",
+      expiresIn: "1d",
     });
-    res.status(200).json({
+    const ipCheck = await ipaddress.findOne({
+      where: { ipAddress: availableIp },
+    });
+    const location = ipCheck ? ipCheck.location : "remote";
+    const attendance = await Attendance.create({
+      userId: checkUser.id,
+      ipAddress: availableIp,
+      location,
+      startTime: new Date(),
+    });
+    req.session.loggedIn = true;
+    req.session.userId = checkUser.id;
+    req.session.ipAddress = availableIp;
+    req.session.loginTime = new Date();
+    req.session.attendanceId = attendance.id;
+    return res.status(200).json({
       status: true,
-      message: "successfully logged in as a user",
+      message: "Successfully logged in as a user",
       token,
+      attendance,
     });
   } catch (error) {
-    res.status(500).json({
-      status: false,
-      message: "Error while Login",
-      error,
-    });
+    return res.status(500).json({ message: "Error while login", error });
   }
 };
+// office location
 
+const isOfficeLocation = (location) => {
+  const officeLocations = [
+    "pf1-groundfloor",
+    "pf1-firstfloor",
+    "pf1-secondfloor",
+  ];
+  return officeLocations.includes(location);
+};
+
+//  mark attendance of the user
+
+const markAttendance = async (userId, loginTime, logoutTime, attendanceId) => {
+  try {
+    const totalMinutes = Math.floor((logoutTime - loginTime) / (1000 * 60));
+    const tMinutes = parseFloat(totalMinutes.toFixed(2));
+    console.log("totalMinutes" + tMinutes);
+    await Attendance.update(
+      { totalMinutes: tMinutes, endTime: logoutTime },
+      { where: { id: attendanceId } }
+    );
+    const attendanceData = await Attendance.findAll({
+      attributes: [
+        [
+          Sequelize.fn("SUM", Sequelize.col("totalMinutes")),
+          "totalAttendanceMinutes",
+        ],
+        "location",
+      ],
+      where: {
+        userId: userId,
+        createdAt: {
+          [Op.gte]: new Date().setHours(0, 0, 0, 0),
+          [Op.lte]: new Date().setHours(23, 59, 59, 999),
+        },
+      },
+      group: ["location"],
+    });
+    //console.log(attendanceData);
+    let remoteTotalMinutes = 0;
+    let officeTotalMinutes = 0;
+    attendanceData.forEach((attendance) => {
+      const { totalAttendanceMinutes, location } = attendance.dataValues;
+      if (location === "remote") {
+        remoteTotalMinutes += parseInt(totalAttendanceMinutes);
+      } else if (isOfficeLocation(location)) {
+        officeTotalMinutes += parseInt(totalAttendanceMinutes);
+      }
+    });
+    console.log("remote hours:", remoteTotalMinutes);
+    console.log("office hours:", officeTotalMinutes);
+    let totHours = (remoteTotalMinutes + officeTotalMinutes) / 60;
+    totHours = parseFloat(totHours.toFixed(2));
+    let officeTotalHours = officeTotalMinutes / 60;
+    officeTotalHours = parseFloat(officeTotalHours.toFixed(2));
+
+    let attendanceStatus = "absent";
+
+    if (totHours >= 7.5) {
+      if (officeTotalHours <= 3) {
+        attendanceStatus = "absent";
+      } else if (officeTotalHours > 3 && officeTotalHours < 5) {
+        attendanceStatus = "halfday";
+      } else if (officeTotalHours > 5) {
+        attendanceStatus = "present";
+      }
+    }
+    console.log("attendance status:", attendanceStatus);
+    console.log("total hours:", totHours);
+    const existingAttenStatus = await AttendanceStatus.findOne({
+      where: { userId: userId, date: new Date().setHours(0, 0, 0, 0) },
+    });
+    if (existingAttenStatus) {
+      await AttendanceStatus.update(
+        { status: attendanceStatus, WorkingHourPerDay: totHours },
+        { where: { id: existingAttenStatus.id } }
+      );
+    } else {
+      await AttendanceStatus.create({
+        userId: userId,
+        date: new Date().setHours(0, 0, 0, 0),
+        day: new Date().toLocaleString("en-US", { weekday: "long" }),
+        WorkingHourPerDay: totHours,
+        status: attendanceStatus,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+// logged out functionality
+const userLogout = async (req, res) => {
+  try {
+    //console.log(req.session.loggedIn);
+    if (!req.session.loggedIn) {
+      return res.status(400).json({ message: "User is not logged in" });
+    }
+    const logoutTime = new Date();
+    const loginTime = new Date(req.session.loginTime);
+    markAttendance(
+      req.session.userId,
+      loginTime,
+      logoutTime,
+      req.session.attendanceId
+    );
+    req.session.destroy((error) => {
+      if (error) {
+        return res
+          .status(500)
+          .json({ message: "Error while logging out", error });
+      }
+      return res.status(200).json({ message: "Successfully logged out" });
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Error while logging out", error });
+  }
+};
 // fetching the user and his permissions
-
 const fetchingUser = async (req, res) => {
   try {
     const user = await User.findOne({
@@ -155,19 +295,19 @@ const fetchingUser = async (req, res) => {
       include: [Permissions],
     });
     if (!user) {
-      res.status(400).send({
+      return res.status(400).send({
         status: false,
-        message: "User Doesnot exits",
+        message: "User Does Not Exist",
         user,
       });
     }
-    res.status(200).send({
+    return res.status(200).send({
       status: true,
       message: "Successfully fetched the user",
       user,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       status: false,
       message: "Error in fetching user details",
       error,
@@ -196,12 +336,12 @@ const deleteUser = async (req, res) => {
       where: { id: userId },
       include: [Permissions],
     });
-    res.status(200).json({
+    return res.status(200).json({
       status: true,
       message: "User deleted successfully",
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       status: false,
       message: "Error in deleting user",
       error,
@@ -280,12 +420,12 @@ const updateUserDetails = async (req, res) => {
       },
       { where: { id: userId } }
     );
-    res.status(200).json({
+    return res.status(200).json({
       status: true,
       message: "User and permissions updated successfully",
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       status: false,
       message: "Error in updating user",
       error,
@@ -299,4 +439,5 @@ module.exports = {
   deleteUser,
   userLogin,
   updateUserDetails,
+  userLogout,
 };

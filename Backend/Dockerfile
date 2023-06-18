@@ -12,4 +12,6 @@ COPY . .
 
 EXPOSE 4000
 
+EXPOSE 5432
+
 CMD ["npm", "run", "server"]

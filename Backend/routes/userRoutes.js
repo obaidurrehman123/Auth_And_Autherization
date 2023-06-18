@@ -9,6 +9,7 @@ const {
   deleteUser,
   userLogin,
   updateUserDetails,
+  userLogout,
 } = require("../controllers/user");
 const router = Router();
 
@@ -22,4 +23,5 @@ router.put(
   checkSupUser,
   updateUserDetails
 );
+router.post("/logout", authenticateUser, userLogout);
 module.exports = router;

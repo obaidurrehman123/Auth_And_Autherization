@@ -16,7 +16,7 @@
     "bugs": {
         "url": "https://github.com/obaidurrehman123/Auth_And_Autherization/issues"
     },
-    "homepage": "https://github.com/obaidurrehman123/Auth_And_Autherization#readme"
+    "homepage": "https://github.com/obaidurrehman123/Auth_And_Autherization#readme",
   "dependencies": {
     "bcrypt": "^5.1.0",
     "dotenv": "^16.1.4",

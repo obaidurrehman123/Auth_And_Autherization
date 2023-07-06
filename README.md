@@ -59,7 +59,7 @@ This project is a Node.js-based API that provides various functionalities for us
 ** This is how you need to create a user through postman **
 
 **Method:POST**
-
+```bash
 {
   "firstname":"ahmad",
   "lastname":"khalid awan",
@@ -72,15 +72,16 @@ This project is a Node.js-based API that provides various functionalities for us
   "canDelete":false,
   "canUpdate":false
 }
-
+```
 **Login as a user:** localhost:4000/api/v1/userroutes/loggedIn 
 
 **Method:POST**
+```bash
 {
    "email":"ahmadkhalid123456@gmail.com",
    "password":"12345678"
 }
-
+```
 ## For updating and deleting an authenticated token of superuser is required and provide that in headers.
 
 **Method:DELETE**
@@ -114,12 +115,12 @@ This project is a Node.js-based API that provides various functionalities for us
 **Method:POST**
 
 **Create Ip Record:** localhost:4000/api/v1/iproute/addingip
-
+```bash
 {
   "ip":"139.135.52.22",
   "location":"pf4-groundfloor"
 }
-
+```
 **Method:UPDATE**
 
 **Update Ip:** localhost:4000/api/v1/iproute/updateIp/2

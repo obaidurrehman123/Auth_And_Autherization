@@ -27,6 +27,17 @@ This project is a Node.js-based API that provides various functionalities for us
 - npm (version 8.19.3)
 - Postgresql Sequelize Orm (version 14.8) 
 
+## Installation
+
+**1.Clone the repository:** git clone https://github.com/obaidurrehman123/Auth_And_Autherization.git
+**2.Install the dependencies:** npm install
+**3.Set up the environment variables:** Open the `.env` file and configure the necessary variables such as database connection details, API keys, etc.
+**4.Run the application:** npm run server
+
+
+
+
+
 
 
 

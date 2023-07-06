@@ -47,15 +47,18 @@ This project is a Node.js-based API that provides various functionalities for us
 ## Api Routes
 
 **1. Creating a super user :** localhost:4000/api/v1/superuser/createSuper  "No need to add the data add the credentials in code file for user".
+
 **2. Login as a superuser:** localhost:4000/api/v1/superuser/superuserlogin "Send the "email" and "password" through postman and get JWT token".
 
 ## Now you are successfully registered as a superuser and can create a user and assign permissions
 
-## Note: Please note that in order to create a user, an authenticated token is required and provide that in headers.
+## Note: Please note that in order to create a user, an authenticated token of superuser is required and provide that in headers.
 
 **3.Create a user:** localhost:4000/api/v1/userroutes/addingUser 
 
 ** This is how you need to create a user through postman **
+
+**Method:POST**
 
 {
   "firstname":"ahmad",
@@ -69,6 +72,77 @@ This project is a Node.js-based API that provides various functionalities for us
   "canDelete":false,
   "canUpdate":false
 }
+
+**Login as a user:** localhost:4000/api/v1/userroutes/loggedIn 
+
+**Method:POST**
+{
+   "email":"ahmadkhalid123456@gmail.com",
+   "password":"12345678"
+}
+
+## For updating and deleting an authenticated token of superuser is required and provide that in headers.
+
+**Method:DELETE**
+
+**Delete user:** localhost:4000/api/v1/userroutes/deleteUser/10 "pass an id in params"
+
+**Method:Update**
+
+**Update user:** localhost:4000/api/v1/userroutes/updateuser/9 "pass an id in params"
+
+## For CRUD on product model you need to have permission so you need to provide token 
+
+**Method:POST**
+
+**creating product:** localhost:4000/api/v1/productroutes/addProduct
+
+**Method:DELETE**
+
+**Delete Product:** localhost:4000/api/v1/productroutes/deleteProduct/2
+
+**Method:UPDATE**
+
+**Update Product:** localhost:4000/api/v1/productroutes/updateProduct/1
+
+## Now Discuus The Routes For Attendance
+
+**First You need to store your ip with its location so you can compare it with the current ip of the user and get the location**
+
+**IP Model CRUD **
+
+**Method:POST**
+
+**Create Ip Record:** localhost:4000/api/v1/iproute/addingip
+
+{
+  "ip":"139.135.52.22",
+  "location":"pf4-groundfloor"
+}
+
+**Method:UPDATE**
+
+**Update Ip:** localhost:4000/api/v1/iproute/updateIp/2
+
+**Method:DELETE**
+
+**Delete Ip:** localhost:4000/api/v1/iproute/deleteIp/2
+
+**Method:POST**
+
+**Logout User:** localhost:4000/api/v1/userroutes/logout
+
+**For Getting The Attendance Record**
+
+localhost:4000/api/v1/attendance/fetchattendence/12
+
+
+
+
+
+
+
+
 
 
 

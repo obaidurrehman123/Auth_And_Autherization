@@ -6,8 +6,6 @@
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
 
 # Description
 This project is a Node.js-based API that provides various functionalities for user management, authentication, and an ip session based attendance system.
@@ -36,6 +34,19 @@ This project is a Node.js-based API that provides various functionalities for us
 **3.Set up the environment variables:** Open the `.env` file and configure the necessary variables such as database connection details, API keys, etc.
 
 **4.Run the application:** npm run server
+
+## Usage
+
+1. Credential of logged in as an admin are you can edit in the config file present in the config folder.
+
+2. Then you can create the user and give them the permissions can explore the permissions model and user model for it.
+
+3. When the user will logged in to the system his ip shall get and start its attendance session on the basis of ip local and when he logout his session and we have maintained the hours what are the minimum hours he has spent in the office and mark attendance accordingly.
+
+
+
+   
+
 
 
 

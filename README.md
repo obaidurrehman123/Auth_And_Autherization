@@ -6,6 +6,7 @@
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
+- [API Routes](#apiroutes)
 
 # Description
 This project is a Node.js-based API that provides various functionalities for user management, authentication, and an ip session based attendance system.
@@ -42,6 +43,38 @@ This project is a Node.js-based API that provides various functionalities for us
 2. Then you can create the user and give them the permissions can explore the permissions model and user model for it.
 
 3. When the user will logged in to the system his ip shall get and start its attendance session on the basis of ip local and when he logout his session and we have maintained the hours what are the minimum hours he has spent in the office and mark attendance accordingly.
+
+## Api Routes
+
+**1. Creating a super user :** localhost:4000/api/v1/superuser/createSuper  "No need to add the data add the credentials in code file for user".
+**2. Login as a superuser:** localhost:4000/api/v1/superuser/superuserlogin "Send the "email" and "password" through postman and get JWT token".
+
+## Now you are successfully registered as a superuser and can create a user and assign permissions
+
+## Note: Please note that in order to create a user, an authenticated token is required and provide that in headers.
+
+**3.Create a user:** localhost:4000/api/v1/userroutes/addingUser 
+
+** This is how you need to create a user through postman **
+
+{
+  "firstname":"ahmad",
+  "lastname":"khalid awan",
+  "email":"ahmadkhalid123456@gmail.com",
+  "password":"12345678",
+  "department":"administration",
+  "role":"operations head",
+  "canRead":true,
+  "canCreate":true,
+  "canDelete":false,
+  "canUpdate":false
+}
+
+
+
+
+
+
 
 
 

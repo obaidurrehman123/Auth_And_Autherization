@@ -22,10 +22,11 @@ This project is a Node.js-based API that provides various functionalities for us
 **5.Daily Attendance Record:** The API maintains a daily attendance record for each user, tracking the amount of time they spent on the system. This record can be accessed to monitor and analyze user activity on a daily basis.
 
 ## Requirements
+```bash
 - Node.js (version 18.13.0)
 - npm (version 8.19.3)
 - Postgresql Sequelize Orm (version 14.8) 
-
+```
 ## Installation
 
 **1.Clone the repository:** git clone https://github.com/obaidurrehman123/Auth_And_Autherization.git
@@ -56,7 +57,7 @@ This project is a Node.js-based API that provides various functionalities for us
 
 **3.Create a user:** localhost:4000/api/v1/userroutes/addingUser 
 
-** This is how you need to create a user through postman **
+**This is how you need to create a user through postman**
 
 **Method:POST**
 ```bash
